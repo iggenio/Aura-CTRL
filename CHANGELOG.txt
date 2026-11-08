@@ -29,6 +29,8 @@ Lighting
   Colour breathing, Alternate, Two-colour siren, Heartbeat, Candle,
   Sweep. Editor with colours (1-3), speed and direction; previews
   follow speed and direction.
+- Two-colour siren: fast flashes like an emergency vehicle; the light
+  zones form two sets that flash in turn, one in each colour.
 - Traffic meter: bar meter with three zones always on, each from 20%
   to 100% across its third of the traffic; colours of your choice
   (default green, yellow, red); 100% is the line speed entered by the

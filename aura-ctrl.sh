@@ -584,6 +584,25 @@ spread_colours() {
 		zone_set $z $R $G $B
 	done
 }
+# Two-colour siren: zones in odd places of the zone map (1st, 3rd, 5th) form set A, the others set B;
+# zones outside the map join a set by their own number, so all 5 zones are always written.
+siren_sets() {
+	local z k p q
+	SG_A=""; SG_B=""
+	for z in 1 2 3 4 5; do
+		p=$z; k=0; for q in $ZMAP; do k=$((k + 1)); [ "$q" = "$z" ] && p=$k; done
+		if [ $((p % 2)) = 1 ]; then SG_A="$SG_A $z"; else SG_B="$SG_B $z"; fi
+	done
+}
+# 3 fast flashes of colour r g b on the zones $1 (the other zones stay off); $5 = speed factor x100
+siren_side() {
+	local z k=0 t=$((45 * $5 / 100))
+	while [ $k -lt 3 ]; do
+		for z in $1; do zone_set $z $2 $3 $4; done; apply_regs; msleep $t
+		for z in $1; do zone_set $z 0 0 0; done; apply_regs; msleep $t
+		k=$((k + 1))
+	done
+}
 start_worker() { "$SELF" worker "$1" "$2" >/dev/null 2>&1 & echo $! > "$RUN/worker.pid"; }
 
 # ---------------------------------------------------------------- background worker
@@ -596,6 +615,7 @@ worker() {
 	case $sp in 0) f=200; hold=30 ;; 1) f=150; hold=10 ;; 3) f=75; hold=3 ;; 4) f=50; hold=2 ;; *) f=100; hold=5 ;; esac
 	router_effect "$a"; e=$E
 	[ $I2C = 1 ] && [ -z "$e" ] && [ "$a" != multi ] && mcu_static_black
+	[ "$a" = siren2 ] && siren_sets
 	uptime_s; last=$UP
 	while :; do
 		case $idx in 0) rgb $C1 ;; 1) rgb $C2 ;; *) rgb $C3 ;; esac; r=$R g=$G b=$B
@@ -616,8 +636,9 @@ worker() {
 			cbreath) breathe_once $r $g $b $((27 * f / 100)); idx=$nxt ;;
 			alt) all_set $r $g $b; msleep $((500 * f / 100)); idx=$nxt ;;
 			siren2)
-				for k in 1 2; do all_set $r $g $b; msleep $((150 * f / 100)); all_set 0 0 0; msleep $((150 * f / 100)); done
-				msleep $((300 * f / 100)); idx=$nxt ;;
+				# emergency vehicle: the two sets of zones flash fast in turn, set A in colour 1, set B in colour 2
+				siren_side "$SG_A" $(rgb $C1; echo $R $G $B) $f
+				siren_side "$SG_B" $(rgb $C2; echo $R $G $B) $f ;;
 			heart)
 				breathe_once $r $g $b 3; breathe_once $r $g $b 3
 				all_set 0 0 0; msleep $((700 * f / 100)) ;;

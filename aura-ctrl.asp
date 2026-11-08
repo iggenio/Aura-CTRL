@@ -175,6 +175,7 @@
 .fx-run{animation:acrun 1.2s ease-in-out infinite}
 .fx-comet{animation:accomet 1.6s linear infinite}
 .fx-siren{animation:acsiren 1.2s linear infinite}
+.fx-siren2{animation:acsiren2 1s linear infinite}
 .fx-starry{animation:actwinkle 2.2s steps(1,end) infinite}
 .fx-cycle{animation:achue 6s linear infinite}
 .fx-heart{animation:acheart 1.3s ease-out infinite}
@@ -184,6 +185,7 @@
 @keyframes acrun{0%,100%{opacity:.08}18%{opacity:1}40%{opacity:.08}}
 @keyframes accomet{0%{opacity:1}35%{opacity:.35}60%,100%{opacity:.05}}
 @keyframes acsiren{0%,9%{opacity:1}9.5%,19%{opacity:.05}19.5%,28%{opacity:1}28.5%,100%{opacity:.05}}
+@keyframes acsiren2{0%,7%{opacity:1}8.3%,15%{opacity:.05}16.6%,23%{opacity:1}25%,32%{opacity:.05}33.3%,40%{opacity:1}41.6%,100%{opacity:.05}}
 @keyframes actwinkle{0%{opacity:.35}20%{opacity:.9}35%{opacity:.25}55%{opacity:1}70%{opacity:.4}85%{opacity:.75}}
 @keyframes achue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}
 @keyframes acheart{0%{opacity:.15}8%{opacity:1}16%{opacity:.35}24%{opacity:1}40%,100%{opacity:.15}}
@@ -217,7 +219,7 @@ var AC_ANIMS = [
 	{id:'fade',name:'Colour fade',grp:'a',cpu:2,cmin:2,cmax:3,fx:'',fb:'steps',help:'Blends smoothly from one colour to the next.'},
 	{id:'cbreath',name:'Colour breathing',grp:'a',cpu:2,cmin:2,cmax:3,fx:'fx-breath',d:3,fb:'breath',help:'Breathes, with a new colour at each breath.'},
 	{id:'alt',name:'Alternate',grp:'a',cpu:2,cmin:2,cmax:2,fx:'fx-flash',d:1,alt:1,fb:'flash',help:'Switches between two colours, like a police light.'},
-	{id:'siren2',name:'Two-colour siren',grp:'a',cpu:2,cmin:2,cmax:2,fx:'fx-siren',d:1.2,alt:1,fb:'siren',help:'Double blink in the first colour, then in the second, like an emergency vehicle.'},
+	{id:'siren2',name:'Two-colour siren',grp:'a',cpu:2,cmin:2,cmax:2,fx:'fx-siren2',d:1,alt:1,fb:'siren',help:'Fast flashes in turn, like an emergency vehicle: some light zones in the first colour, the others in the second.'},
 	{id:'heart',name:'Heartbeat',grp:'a',cpu:2,cmin:1,cmax:1,fx:'fx-heart',d:1.3,fb:'breath',help:'Double beat, then a pause.'},
 	{id:'candle',name:'Candle',grp:'a',cpu:2,cmin:1,cmax:1,fx:'fx-candle',d:2.5,rnd:1,fb:'starry',help:'Flickers like a candle.'},
 	{id:'sweep',name:'Sweep',grp:'a',cpu:2,cmin:2,cmax:3,fx:'',dir:true,fb:'multi',help:'Your colours move across the light zones of the logo. The result depends on the router model.'}
