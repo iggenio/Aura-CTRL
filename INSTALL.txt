@@ -1,0 +1,223 @@
+Aura-CTRL - Aura RGB logo control and status alerts for Asuswrt-Merlin
+Version 1.0.0 - 8 November 2026
+Author: iggenio
+License: GNU General Public License v3.0 or later (see LICENSE)
+Developed by iggenio with the assistance of Claude (Anthropic), an AI model.
+================================================================
+
+IMPORTANT - PREREQUISITES
+----------------------------------------------------------------
+  1. Firmware: Asuswrt-Merlin (it does NOT work on the stock ASUS
+     firmware). It uses the Merlin Addons API (/usr/sbin/helper.sh,
+     custom_settings), the services-start, service-event and
+     wan-event hooks and cru.
+
+  2. JFFS custom scripts enabled:
+     Administration > System > "Enable JFFS custom scripts and
+     configs" = Yes.
+
+  3. A router with an Aura RGB logo. Check on the router (SSH):
+
+       nvram get rc_support | grep -o aura_rgb
+       nvram get aurargb_val
+
+     The first command must print "aura_rgb", the second something
+     like "255,0,0,1,0,0".
+
+  4. SSH access to the router (LAN only is enough) and a PC with an
+     SSH/SCP client (Windows: OpenSSH in PowerShell).
+
+Full features (animations made by the add-on, smooth transitions,
+several alerts sharing the logo) are verified on:
+  ASUS ROG Rapture GT-AXE11000, Asuswrt-Merlin 3004.388.12_2.
+On other models Aura-CTRL uses only the router effects until you
+test the light zones and choose 3 or 5 zones in
+Diagnostics > Light zones (see README.md, "Supported routers").
+
+Not required: amtm, Entware, a USB drive.
+Optional: ZW-DFS (radar alerts), Skynet (protection alert).
+
+
+FILES
+----------------------------------------------------------------
+  aura-ctrl.sh    management script
+  aura-ctrl.asp   WebUI page
+  INSTALL.txt     this guide
+  CHANGELOG.txt   version history
+  README.md       overview
+
+On the router both go in: /jffs/addons/aura-ctrl/
+Files created there at run time: known_devices.txt,
+new_devices.txt, fingerprint.txt, original_leds.txt, events.log,
+radar_seen.txt, skynet_update.txt
+Settings: /jffs/addons/custom_settings.txt (keys auractrl_*)
+Temporary state: /tmp/aura-ctrl (cleared at every reboot)
+
+
+INSTALLATION
+----------------------------------------------------------------
+In the commands below replace <router-user> with your router
+login name and <router-ip> with your router LAN address.
+
+Each step says WHERE to run it:
+
+  [router shell]  a PowerShell/cmd window on your PC where you
+                  logged in with "ssh <router-user>@<router-ip>".
+                  Commands typed here run ON THE ROUTER.
+  [PC shell]      a SECOND PowerShell/cmd window that is NOT
+                  logged in to the router. Commands typed here run
+                  ON YOUR PC.
+  [router WebUI]  the router web page in your browser.
+
+Step 1 - Create the add-on folder [router shell]
+
+    ssh <router-user>@<router-ip>
+    mkdir -p /jffs/addons/aura-ctrl
+
+  Keep this window open.
+
+Step 2 - Copy the files [PC shell]
+  In the folder that holds aura-ctrl.sh and aura-ctrl.asp:
+
+    scp -O aura-ctrl.sh aura-ctrl.asp <router-user>@<router-ip>:/jffs/addons/aura-ctrl/
+
+  "-O" is required by recent OpenSSH versions (without it you get
+  "sftp-server: not found"). On older versions remove it.
+  The files must have Unix line endings (LF).
+
+Step 3 - Hooks and installation [router shell]
+
+  cd /jffs/scripts
+  for f in services-start service-event wan-event; do [ -f $f ] || echo '#!/bin/sh' > $f; chmod +x $f; done
+  grep -q aura-ctrl services-start || echo '/jffs/addons/aura-ctrl/aura-ctrl.sh startup & # aura-ctrl' >> services-start
+  grep -q aura-ctrl service-event || echo '/jffs/addons/aura-ctrl/aura-ctrl.sh event "$1" "$2" & # aura-ctrl' >> service-event
+  grep -q aura-ctrl wan-event || echo '/jffs/addons/aura-ctrl/aura-ctrl.sh wanevent "$1" "$2" & # aura-ctrl' >> wan-event
+  chmod +x /jffs/addons/aura-ctrl/aura-ctrl.sh
+  /jffs/addons/aura-ctrl/aura-ctrl.sh install
+
+  Note: "install" records the current router configuration as the
+  trusted one for the Router tampering alert, and all devices in
+  the DHCP list as known. Install on a router you trust.
+
+Step 4 - Check [router shell]
+
+  cru l | grep auractrl
+  cat /www/user/auractrl_status.js
+
+  Expected: an "auractrl_check" cron entry every minute and a status
+  line with "supported":"1". In the system log the message
+  "WebUI page installed as userN.asp" appears (with scribe it can
+  take a few minutes).
+
+Step 5 - Open the page [router WebUI]
+  Reload the router WebUI (Ctrl+F5) and open
+  Administration > Aura-CTRL:
+  - Lighting: choose the scene (press "Choose an animation"), the
+    brightness and, if you like, separate day and night scenes.
+  - Alerts: review the alert list and the family colours.
+  - Diagnostics: on models other than the GT-AXE11000, test the
+    light zones and choose 3 or 5 zones; check the colour correction
+    with the test colours.
+  Press Save.
+
+Step 6 - Test [router WebUI]
+  In Alerts > Alert list press "Test" on an alert: the logo shows it
+  for 10 seconds, then goes back to the scene.
+
+
+RESTORE THE LOGO
+----------------------------------------------------------------
+At any time [router shell]:
+
+  service restart_leds
+
+The router shows its saved Aura settings again (a reboot does the
+same). Aura-CTRL applies its scene again at the next change or at
+the next check with: /jffs/addons/aura-ctrl/aura-ctrl.sh check
+
+
+HOW TO UPDATE
+----------------------------------------------------------------
+Copy the new files from the [PC shell] as in Step 2, then in the
+[router shell]:
+
+  chmod +x /jffs/addons/aura-ctrl/aura-ctrl.sh
+  /jffs/addons/aura-ctrl/aura-ctrl.sh install
+
+Reload the WebUI with Ctrl+F5.
+
+
+COMMANDS (router, SSH)
+----------------------------------------------------------------
+  /jffs/addons/aura-ctrl/aura-ctrl.sh check         check alerts and apply (cron, every minute)
+  /jffs/addons/aura-ctrl/aura-ctrl.sh ack           acknowledge the alerts shown
+  /jffs/addons/aura-ctrl/aura-ctrl.sh test wan      show an alert for 10 seconds
+  /jffs/addons/aura-ctrl/aura-ctrl.sh identify 4 5  light zone 4 in white for 5 s
+  /jffs/addons/aura-ctrl/aura-ctrl.sh colours       show the family colours, 4 s each
+  /jffs/addons/aura-ctrl/aura-ctrl.sh calib ffc800  show one colour for 5 s
+  /jffs/addons/aura-ctrl/aura-ctrl.sh effect 7      show router effect 7 (0-13) until "effect end"
+  /jffs/addons/aura-ctrl/aura-ctrl.sh status        regenerate the page status
+  /jffs/addons/aura-ctrl/aura-ctrl.sh version       show the installed version
+  /jffs/addons/aura-ctrl/aura-ctrl.sh install       (re)install the WebUI page
+  /jffs/addons/aura-ctrl/aura-ctrl.sh uninstall     remove page, cron and hooks
+  grep -a ' aura-ctrl: ' /opt/var/log/messages | tail
+  tail /jffs/addons/aura-ctrl/events.log
+
+  Alert names for "test": tamper eviltwin wan prot newdev radar
+  temp usb cac fw admin
+
+
+UNINSTALL
+----------------------------------------------------------------
+  /jffs/addons/aura-ctrl/aura-ctrl.sh uninstall
+  rm -r /jffs/addons/aura-ctrl
+
+"uninstall" restores the Aura values the router had before the
+first installation.
+
+
+NOTES
+----------------------------------------------------------------
+- Aura-CTRL never runs "nvram commit": alert colours are never
+  saved, and the router always starts with its own saved Aura
+  settings until Aura-CTRL starts and applies its scene. During the
+  first minutes after a reboot (clock not yet set) Internet down, USB,
+  Skynet and Router tampering are not checked.
+- If the router LEDs are turned off (LED button or
+  Administration > System), Aura-CTRL does not change the logo.
+- Animations marked High CPU (Colour fade, Colour breathing,
+  Alternate, Two-colour siren, Heartbeat, Candle, Sweep) keep about
+  one CPU core busy while they run. Eco mode turns them off.
+- Admin session active: the WebUI login counts for the Auto Logout
+  time set in Administration > System (15 minutes if it is off).
+  Opening the Aura-CTRL page is itself an admin session.
+- Evil twin detection reads the scan results the router already
+  collects ("wl scanresults"); it never starts a Wi-Fi scan.
+- Traffic meter: 100% is the speed of your internet line. Enter the
+  download and upload results of a speed test (for example
+  speedtest.net, from a computer connected by cable, with no other
+  traffic) in Lighting, in the Traffic meter box. Without them the
+  meter stays at rest. The measure runs every 3, 5 or 10 seconds and
+  starts no process except one short awk call.
+- Brightness follows a curve (power = slider^1.5): the eye sees LED
+  power almost logarithmically. At very low brightness the effects
+  of the light controller (Breathing, Pulse...) have fewer steps.
+- Colour correction: the page shows colours as you choose them; the
+  correction applies only on the logo. "Use the default" goes back
+  to the values of your model.
+- Light zones on models not yet verified: press Zone 1 to Zone 5 in
+  Diagnostics, note which part of the logo lights up, then choose
+  "3 zones" if only zones 1-3 light up or "5 zones" if all do, and
+  press Save. Choose "Not set" to go back to router effects only.
+- The router shell computes with 32 bits: Aura-CTRL keeps every
+  number below 2^31 (traffic counters are read in KiB by awk).
+- Tested with scribe, Skynet, scMerlin and ZW-DFS installed.
+- A factory reset erases /jffs: reinstall the add-on.
+
+
+AI ASSISTANCE
+----------------------------------------------------------------
+Aura-CTRL was developed by iggenio with the assistance of Claude
+(Anthropic), an AI model, which contributed to the analysis, the
+code and this documentation. Review the code before installing it
+on your own router; use it at your own risk.

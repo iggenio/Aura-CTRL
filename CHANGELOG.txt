@@ -1,0 +1,77 @@
+Aura-CTRL - Changelog
+================================================================
+All notable changes to Aura-CTRL are listed here, newest first.
+Versions follow semantic versioning (MAJOR.MINOR.PATCH):
+  MAJOR - incompatible changes (settings, file layout, hooks)
+  MINOR - new features, backward compatible
+  PATCH - bug fixes
+
+
+[1.0.0] - 2026-11-08
+----------------------------------------------------------------
+First release. Tested on ASUS ROG Rapture GT-AXE11000 with
+Asuswrt-Merlin 3004.388.12_2, together with scribe, Skynet, scMerlin
+and ZW-DFS. Released under GPL-3.0-or-later. Author: iggenio.
+Developed with the assistance of Claude (Anthropic).
+
+WebUI page
+- Administration > Aura-CTRL, in English: Aura RGB switch, status card
+  (what the logo shows, active alerts with details, Acknowledge) and
+  three tabs: Lighting, Alerts, Diagnostics.
+- Settings saved in the background, without the progress page; one
+  notice at the bottom of the window for every message.
+
+Lighting
+- One scene, or separate day and night scenes with start times.
+- 24 animations: the 14 effects of the light controller (including
+  the hidden Pulse, Siren and Siren multicolor) and 10 made by
+  Aura-CTRL: Multi-colour, Colour steps, Traffic meter, Colour fade,
+  Colour breathing, Alternate, Two-colour siren, Heartbeat, Candle,
+  Sweep. Editor with colours (1-3), speed and direction; previews
+  follow speed and direction.
+- Traffic meter: bar meter with three zones always on, each from 20%
+  to 100% across its third of the traffic; colours of your choice
+  (default green, yellow, red); 100% is the line speed entered by the
+  user (download and upload in Mbps, from a speed test); measured
+  every 3, 5 or 10 seconds.
+- Brightness (day and night), with a curve that matches the eye.
+- Smooth transitions (fade through black, no flash of the previous
+  colour) and Eco mode (no High CPU animations).
+
+Alerts
+- 11 alerts with fixed rules and severities: Router tampering, Evil
+  twin detected, Internet down, Protection stalled (Skynet), Unknown
+  device, Radar detected and Radar check in progress (ZW-DFS), High
+  temperature, USB missing or almost full, Firmware update available,
+  Admin session active.
+- Family colours with Custom 1 and Custom 2 (renamable); per alert:
+  colour source, animation, duration, shown at night, Test.
+- Several alerts at once: reminders every 10 seconds; with a known
+  zone map up to 3 non-critical alerts share the logo.
+
+Diagnostics
+- Light zone test, one button per zone (1 to 5, 3-10 s); on models
+  without a verified map the user chooses 3 or 5 zones.
+- Colour correction (red, green, blue), applied on the logo only, with
+  test colours and a run through the family colours; GT-AXE11000
+  default 100/60/57 (measured).
+- Router model, CPU temperature, unknown devices, evil twin BSSIDs,
+  recent events.
+
+Script
+- Light on the router: settings read once per run, nvram variables
+  with "nvram get" and a 30-minute cache for the ones that rarely
+  change, parsing with shell built-ins (about 30 processes and half a
+  second per check on a GT-AXE11000).
+- Safe with the 32-bit arithmetic of the router shell.
+- Commands: install, startup, check, event, wanevent, ack, test,
+  identify, colours, calib, effect, status, version, uninstall.
+- Never runs "nvram commit"; uninstall restores the original Aura
+  values.
+
+Known limitations
+- High temperature uses a fixed 90 °C limit.
+- Firmware update available relies on webs_state_flag.
+- Skynet update detection reads Skynet events.log.
+- The previews of the router effects are approximations; reports from
+  users of other models are welcome.
