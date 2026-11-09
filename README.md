@@ -78,7 +78,7 @@ To restore the original logo at any time: `service restart_leds` (a reboot does 
 
 ## Support
 
-If ZW-DFS is useful to you, you can buy me a coffee:
+If Aura-CTRL is useful to you, you can buy me a coffee:
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/iggenio)
 
